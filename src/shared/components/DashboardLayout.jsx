@@ -30,10 +30,10 @@ const DashboardLayout = () => {
                 </li>
                 <li>
                   <Link
-                    to="/products"
+                    to="/my-drive"
                     className="block py-2 px-4 rounded hover:bg-gray-100"
                   >
-                    Products
+                    My Drive
                   </Link>
                 </li>
               </ul>

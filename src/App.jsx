@@ -7,8 +7,6 @@ import DashboardLayout from "./shared/components/DashboardLayout";
 import LoginPage from "./features/auth/LoginPage";
 import RegisterPage from "./features/auth/RegisterPage";
 import DashboardHomePage from "./features/dashboard-home/DashboardHomePage";
-import ProductsPage from "./features/products/ProductsPage";
-import ProductDetailsPage from "./features/products/ProductDetailsPage";
 import NotFoundPage from "./features/not-found/NotFoundPage";
 
 // Route configuration array
@@ -28,14 +26,6 @@ const routesConfig = [
       {
         path: "dashboard",
         element: <DashboardHomePage />,
-      },
-      {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
-        path: "products/:id",
-        element: <ProductDetailsPage />,
       },
     ],
   },

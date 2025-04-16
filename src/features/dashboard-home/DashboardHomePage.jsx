@@ -19,21 +19,6 @@ const DashboardHomePage = () => {
           dashboard.
         </p>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded shadow border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
-            Your Products
-          </h2>
-          <p className="text-gray-600 mb-4">Manage and view your products.</p>
-          <Link
-            to="/products"
-            className="inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-          >
-            View Products
-          </Link>
-        </div>
-      </div>
     </div>
   );
 };
