@@ -28,9 +28,19 @@ const DashboardLayout = () => {
                     Dashboard Home
                   </Link>
                 </li>
+              {(user.role === 'ADMIN' || user.role === 'SUPER_ADMIN') && (
                 <li>
                   <Link
-                    to="/my-drive"
+                    to="/users"
+                    className="block py-2 px-4 rounded hover:bg-gray-100"
+                  >
+                    User Management
+                  </Link>
+                </li>
+              )}
+                <li>
+                  <Link
+                    to="/files"
                     className="block py-2 px-4 rounded hover:bg-gray-100"
                   >
                     My Drive

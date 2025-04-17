@@ -12,7 +12,7 @@ const RegisterPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -27,15 +27,21 @@ const RegisterPage = () => {
       return;
     }
 
-    // Dummy registration
+    // Registration with API
     try {
       const userData = {
         name,
         email,
+        password
       };
 
-      register(userData);
-      navigate("/dashboard", { replace: true });
+      const success = await register(userData);
+      
+      if (success) {
+        navigate("/dashboard", { replace: true });
+      } else {
+        setError("Registration failed. Please try again.");
+      }
     } catch (err) {
       setError("Registration failed");
     }

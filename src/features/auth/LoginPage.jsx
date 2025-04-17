@@ -15,7 +15,7 @@ const LoginPage = () => {
   // Get the previous location or use dashboard as default
   const from = location.state?.from?.pathname || "/dashboard";
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -25,16 +25,15 @@ const LoginPage = () => {
       return;
     }
 
-    // Dummy login
+    // Login with API
     try {
-      const userData = {
-        id: 1,
-        name: email.split("@")[0], // Use part of email as name for demo
-        email,
-      };
-
-      login(userData);
-      navigate(from, { replace: true });
+      const success = await login({ email, password });
+      
+      if (success) {
+        navigate(from, { replace: true });
+      } else {
+        setError("Invalid credentials");
+      }
     } catch (err) {
       setError("Invalid credentials");
     }

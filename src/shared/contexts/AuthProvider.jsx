@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { AuthContext } from "./AuthContext";
+import authService from "../api/auth-service";
+
+// For debugging
+console.log('AuthProvider initialized');
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -10,23 +14,44 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
+      // Verify token by fetching current user profile
+      authService.getProfile()
+        .catch(() => {
+          // If the token is invalid, log the user out
+          logout();
+        });
     }
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
-    // Simulate login API call
-    setUser(userData);
-    localStorage.setItem("user", JSON.stringify(userData));
-    return true;
+  const login = async (credentials) => {
+    try {
+      const result = await authService.login(credentials);
+      setUser(result.user);
+      localStorage.setItem("user", JSON.stringify({
+        ...result.user,
+        token: result.token
+      }));
+      return true;
+    } catch (error) {
+      console.error("Login failed:", error);
+      return false;
+    }
   };
 
-  const register = (userData) => {
-    // Simulate register API call
-    const newUser = { ...userData, id: Date.now() };
-    setUser(newUser);
-    localStorage.setItem("user", JSON.stringify(newUser));
-    return true;
+  const register = async (userData) => {
+    try {
+      const result = await authService.register(userData);
+      setUser(result.user);
+      localStorage.setItem("user", JSON.stringify({
+        ...result.user,
+        token: result.token
+      }));
+      return true;
+    } catch (error) {
+      console.error("Registration failed:", error);
+      return false;
+    }
   };
 
   const logout = () => {

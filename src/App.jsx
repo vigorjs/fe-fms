@@ -9,6 +9,15 @@ import RegisterPage from "./features/auth/RegisterPage";
 import DashboardHomePage from "./features/dashboard-home/DashboardHomePage";
 import NotFoundPage from "./features/not-found/NotFoundPage";
 
+// User management pages
+import UsersListPage from "./features/users/UsersListPage";
+import UserDetailPage from "./features/users/UserDetailPage";
+import UserEditPage from "./features/users/UserEditPage";
+import CreateAdminPage from "./features/users/CreateAdminPage";
+
+// File management pages
+import FileBrowserPage from "./features/file-browser/FileBrowserPage";
+
 // Route configuration array
 const routesConfig = [
   {
@@ -26,6 +35,26 @@ const routesConfig = [
       {
         path: "dashboard",
         element: <DashboardHomePage />,
+      },
+      {
+        path: "users",
+        element: <UsersListPage />,
+      },
+      {
+        path: "users/create-admin",
+        element: <CreateAdminPage />,
+      },
+      {
+        path: "users/edit/:id",
+        element: <UserEditPage />,
+      },
+      {
+        path: "users/:id",
+        element: <UserDetailPage />,
+      },
+      {
+        path: "files",
+        element: <FileBrowserPage />,
       },
     ],
   },
