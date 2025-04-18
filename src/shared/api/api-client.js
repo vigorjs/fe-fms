@@ -1,7 +1,7 @@
 // Base API client for making HTTP requests
 import { getErrorMessage } from '../utils/toast';
 
-const API_BASE_URL = 'http://localhost:6969/api';
+const API_BASE_URL = 'https://34.170.122.1:3000/api';
 
 // Helper to get the auth token from local storage
 const getAuthToken = () => {
