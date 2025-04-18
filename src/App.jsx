@@ -19,6 +19,9 @@ import CreateAdminPage from "./features/users/CreateAdminPage";
 import FileBrowserPage from "./features/file-browser/FileBrowserPage";
 import PublicFileViewPage from "./features/file-browser/PublicFileViewPage";
 
+// Search page
+import SearchResultsPage from "./features/search/SearchResultsPage";
+
 // Route configuration array
 const routesConfig = [
   {
@@ -56,6 +59,10 @@ const routesConfig = [
       {
         path: "files",
         element: <FileBrowserPage />,
+      },
+      {
+        path: "search",
+        element: <SearchResultsPage />,
       },
     ],
   },

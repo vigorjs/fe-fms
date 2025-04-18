@@ -1,12 +1,29 @@
-import React, { useState } from "react";
-import { Link } from "react-router";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router";
 import { useAuth } from "../hooks/useAuth";
+import useDebounce from "../hooks/useDebounce";
 import { Search, Menu, X, Bell, HelpCircle, LogOut } from "lucide-react";
 
 const Navigation = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  
+  // Debounce the search query to reduce unnecessary renders
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  // Auto-navigate to search page when debounced query changes
+  useEffect(() => {
+    // Only navigate if search query is not empty and user is typing in the navigation bar
+    if (debouncedSearchQuery && debouncedSearchQuery.trim() !== "" && isSearchFocused) {
+      navigate(`/search?q=${encodeURIComponent(debouncedSearchQuery)}`);
+      setIsSearchFocused(false); // Reset focus state after navigation
+    }
+  }, [debouncedSearchQuery]);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -14,6 +31,15 @@ const Navigation = () => {
 
   const toggleProfileMenu = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    // Navigate to search results page with query
+    navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+    setSearchQuery(""); // Clear search input after submitting
   };
 
   return (
@@ -67,16 +93,30 @@ const Navigation = () => {
           
           {/* Search bar - desktop */}
           <div className="hidden md:flex md:items-center md:ml-6">
-            <div className="relative">
+            <form onSubmit={handleSearch} className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search size={16} className="text-gray-400" />
               </div>
               <input
                 type="text"
-                placeholder="Search files..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+                placeholder="Search files and folders..."
                 className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
-            </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                >
+                  <X size={16} />
+                </button>
+              )}
+              <button type="submit" className="sr-only">Search</button>
+            </form>
           </div>
 
           {/* Right side navigation elements */}
@@ -141,9 +181,17 @@ const Navigation = () => {
                 
                 {/* Mobile menu button */}
                 <div className="md:hidden flex items-center">
+                  {/* Mobile search button */}
+                  <Link
+                    to="/search"
+                    className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+                  >
+                    <Search size={20} />
+                  </Link>
+                  
                   <button
                     onClick={toggleMobileMenu}
-                    className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+                    className="ml-2 inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
                   >
                     <span className="sr-only">Open main menu</span>
                     {isMobileMenuOpen ? (
@@ -177,6 +225,33 @@ const Navigation = () => {
       {/* Mobile menu, show/hide based on menu state */}
       {isMobileMenuOpen && isAuthenticated && (
         <div className="md:hidden">
+          {/* Mobile search form */}
+          <div className="px-2 pt-2 pb-3">
+            <form onSubmit={handleSearch} className="mt-1 relative rounded-md shadow-sm">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={16} className="text-gray-400" />
+              </div>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                placeholder="Search files and folders..."
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-500"
+                >
+                  <X size={16} />
+                </button>
+              )}
+              <button type="submit" className="sr-only">Search</button>
+            </form>
+          </div>
+          
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <Link
               to="/dashboard"

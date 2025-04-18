@@ -54,7 +54,7 @@ const FileBrowserPage = () => {
         
         // Build the folder path
         if (currentFolder) {
-          buildFolderPath(currentFolder);
+          loadFolderPath(currentFolder);
         } else {
           setFolderPath([{ id: null, name: "My Drive" }]);
         }
@@ -69,32 +69,19 @@ const FileBrowserPage = () => {
     loadFolderContents();
   }, [currentFolder, refreshTrigger]);
 
-  // Build folder path for breadcrumbs
-  const buildFolderPath = async (folderId) => {
-    const path = [{ id: null, name: "My Drive" }];
-    let currentId = folderId;
-    
-    // This is a simplified approach - in a real app, you'd fetch the full path in one go
+  // Load folder path for breadcrumbs using the new API
+  const loadFolderPath = async (folderId) => {
     try {
-      while (currentId) {
-        // Find the folder in the loaded folders first
-        let folder = folders.find(f => f.id === currentId);
-        
-        // If not found, fetch it
-        if (!folder) {
-          // This is a placeholder - you'd need to add a method to get a single folder by ID
-          // For now, we'll just add the ID for demonstration
-          folder = { id: currentId, name: `Folder ${currentId}` };
-        }
-        
-        path.unshift(folder);
-        currentId = folder.parentId;
-      }
+      const result = await fileService.getFolderPath(folderId);
+      setFolderPath(result.path);
     } catch (error) {
-      console.error("Error building folder path:", error);
+      console.error("Failed to load folder path:", error);
+      // Fallback to a simple path with just the current folder
+      setFolderPath([
+        { id: null, name: "My Drive" },
+        { id: folderId, name: `Folder ${folderId}` }
+      ]);
     }
-    
-    setFolderPath([{ id: null, name: "My Drive" }, ...path.slice(1)]);
   };
 
   // Navigate to a folder

@@ -12,6 +12,16 @@ const fileService = {
     return apiClient.get(`/files/folders${queryParams}`);
   },
   
+  // Get folder by ID (for breadcrumb)
+  getFolderById: (folderId) => {
+    return apiClient.get(`/files/folders/${folderId}`);
+  },
+  
+  // Get folder path (for breadcrumb)
+  getFolderPath: (folderId) => {
+    return apiClient.get(`/files/folders/${folderId}/path`);
+  },
+  
   deleteFolder: (folderId) => {
     return apiClient.delete(`/files/folders/${folderId}`);
   },
