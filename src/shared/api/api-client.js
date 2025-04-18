@@ -18,8 +18,8 @@ const request = async (endpoint, options = {}) => {
     ...options.headers,
   };
   
-  // Don't set Content-Type for FormData (multipart/form-data)
-  if (!options.body || !(options.body instanceof FormData)) {
+  // Only set Content-Type for requests with body data
+  if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
   
@@ -83,6 +83,14 @@ const request = async (endpoint, options = {}) => {
         return { success: true };
       }
       
+      // Handle specific error cases
+      if (response.status === 400 && parseError.message.includes('JSON')) {
+        // This could be an empty body error with JSON content-type
+        const error = new Error('Request format error: ' + parseError.message);
+        error.response = { status: response.status };
+        throw error;
+      }
+      
       throw new Error('Invalid response format');
     }
   } catch (error) {
@@ -107,10 +115,24 @@ const apiClient = {
     body: data,
   }),
   
-  delete: (endpoint, options = {}) => request(endpoint, {
-    ...options,
-    method: 'DELETE',
-  }),
+  delete: (endpoint, options = {}) => {
+    // For DELETE requests, don't set Content-Type header by default
+    // as Fastify will expect a body if Content-Type is 'application/json'
+    const deleteOptions = {
+      ...options,
+      method: 'DELETE',
+      headers: {
+        ...options.headers,
+      }
+    };
+    
+    // Only if body exists, set the Content-Type
+    if (options.body) {
+      deleteOptions.headers['Content-Type'] = 'application/json';
+    }
+    
+    return request(endpoint, deleteOptions);
+  },
 
   // Helper to get the auth token
   getAuthToken,

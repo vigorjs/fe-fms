@@ -6,6 +6,7 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
   const [email, setEmail] = useState("");
   const [permission, setPermission] = useState("VIEW");
   const [publicLink, setPublicLink] = useState("");
+  const [publicViewLink, setPublicViewLink] = useState("");
   const [isSharing, setIsSharing] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [error, setError] = useState("");
@@ -14,7 +15,12 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
   // Check if file is already public
   useEffect(() => {
     if (file && file.accessLevel === 'PUBLIC' && file.publicToken) {
+      // Set direct download link
       setPublicLink(fileService.getPublicFileUrl(file.publicToken));
+      
+      // Set view in browser link with full absolute URL
+      const origin = window.location.origin;
+      setPublicViewLink(`${origin}/view/${file.publicToken}`);
     }
   }, [file]);
   
@@ -58,13 +64,23 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
   const handleCreatePublicLink = async () => {
     setIsGeneratingLink(true);
     setError("");
-    
+  
     try {
       const result = await fileService.createPublicLink(file.id);
-      setPublicLink(fileService.getPublicFileUrl(result.publicToken));
-      showToast("Public link created successfully", TOAST_TYPES.SUCCESS);
-      
-      // After generating link, refresh the file data
+  
+      const publicDownloadUrl = fileService.getPublicFileUrl(result.publicToken);
+      const origin = window.location.origin;
+      const publicBrowserViewUrl = `${origin}/view/${result.publicToken}`;
+  
+      // Set both links
+      setPublicLink(publicDownloadUrl);
+      setPublicViewLink(publicBrowserViewUrl);
+  
+      // ✅ Auto-copy the direct download link to clipboard
+      handleCopyLink(publicDownloadUrl);
+  
+      showToast("Public link created and copied to clipboard!", TOAST_TYPES.SUCCESS);
+  
       onSuccess();
     } catch (error) {
       console.error("Error creating public link:", error);
@@ -75,16 +91,36 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
     }
   };
   
+  
   // Copy public link to clipboard
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(publicLink)
-      .then(() => {
+  const handleCopyLink = (link) => {
+    try {
+      // Create a temporary text area element
+      const textArea = document.createElement("textarea");
+      // Set its value to the link we want to copy
+      textArea.value = link;
+      // Make it invisible
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      // Focus and select the text
+      textArea.focus();
+      textArea.select();
+      // Execute the copy command
+      const successful = document.execCommand("copy");
+      // Remove the temporary element
+      document.body.removeChild(textArea);
+      
+      if (successful) {
         showToast("Link copied to clipboard!", TOAST_TYPES.SUCCESS);
-      })
-      .catch(error => {
-        console.error("Failed to copy link:", error);
-        showErrorToast("Failed to copy link to clipboard");
-      });
+      } else {
+        showToast("Failed to copy link. The link is: " + link, TOAST_TYPES.WARNING);
+      }
+    } catch (error) {
+      console.error("Failed to copy link:", error);
+      showErrorToast("Failed to copy link to clipboard");
+    }
   };
   
   return (
@@ -156,19 +192,63 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
           <h3 className="font-medium mb-2">Get link</h3>
           
           {publicLink ? (
-            <div className="flex items-center">
-              <input
-                type="text"
-                value={publicLink}
-                readOnly
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l focus:outline-none"
-              />
-              <button
-                onClick={handleCopyLink}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r"
-              >
-                Copy
-              </button>
+            <div className="flex flex-col">
+              {/* Download Link */}
+              <div className="flex items-center mb-3">
+                <input
+                  type="text"
+                  value={publicLink}
+                  readOnly
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l focus:outline-none text-sm"
+                  placeholder="Direct download link"
+                />
+                <button
+                  onClick={() => handleCopyLink(publicLink)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r"
+                >
+                  Copy
+                </button>
+              </div>
+              
+              {/* View Link */}
+              <div className="flex items-center mb-3">
+                <input
+                  type="text"
+                  value={publicViewLink}
+                  readOnly
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l focus:outline-none text-sm"
+                  placeholder="View in browser link"
+                />
+                <button
+                  onClick={() => handleCopyLink(publicViewLink)}
+                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r"
+                >
+                  Copy
+                </button>
+              </div>
+              
+              <div className="text-sm text-gray-600 mb-2">
+                <p>Open links:</p>
+              </div>
+              
+              <div className="flex space-x-2">
+                <a 
+                  href={publicLink} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-blue-100 hover:bg-blue-200 text-blue-800 text-center py-2 px-3 rounded text-sm"
+                >
+                  Download
+                </a>
+                <a 
+                  href={publicViewLink}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 text-center py-2 px-3 rounded text-sm"
+                >
+                  View
+                </a>
+              </div>
             </div>
           ) : (
             <button
@@ -181,7 +261,7 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
           )}
           
           <p className="text-xs text-gray-500 mt-1">
-            Anyone with this link can access the file
+            Anyone with these links can access the file
           </p>
         </div>
       </div>

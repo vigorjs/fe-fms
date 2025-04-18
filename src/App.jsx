@@ -17,6 +17,7 @@ import CreateAdminPage from "./features/users/CreateAdminPage";
 
 // File management pages
 import FileBrowserPage from "./features/file-browser/FileBrowserPage";
+import PublicFileViewPage from "./features/file-browser/PublicFileViewPage";
 
 // Route configuration array
 const routesConfig = [
@@ -73,6 +74,10 @@ const routesConfig = [
         <RegisterPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: "/view/:token",
+    element: <PublicFileViewPage />,
   },
   {
     path: "*",

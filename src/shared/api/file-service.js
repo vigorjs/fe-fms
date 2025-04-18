@@ -35,6 +35,8 @@ const fileService = {
     
     if (options.name) formData.append('name', options.name);
     if (options.folderId) formData.append('folderId', options.folderId);
+    // Add access level parameter
+    if (options.accessLevel) formData.append('accessLevel', options.accessLevel);
     
     // Log what we're sending for debugging
     console.log('Uploading file:', {
@@ -85,8 +87,17 @@ const fileService = {
   },
   
   // Helper functions
-  getPublicFileUrl: (token) => {
-    return `${apiClient.getBaseUrl()}/files/public/${token}`;
+  getPublicFileUrl: (token, inline = false) => {
+    const inlineParam = inline ? '?inline=true' : '';
+    return `${apiClient.getBaseUrl()}/files/public/${token}${inlineParam}`;
+  },
+
+  getPublicFileViewUrl: (token) => {
+    return `/view/${token}`;
+  },
+
+  getPublicFileInfo: (token) => {
+    return apiClient.get(`/files/public/${token}/info`);
   },
   
   // File icon helpers
