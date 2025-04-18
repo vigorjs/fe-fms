@@ -1,5 +1,6 @@
 import React from "react";
 import fileService from "../../../shared/api/file-service";
+import { HardDrive, AlertCircle } from "lucide-react";
 
 const StorageInfo = ({ storageInfo }) => {
   const { storageQuota, storageUsed, usagePercentage } = storageInfo;
@@ -12,20 +13,34 @@ const StorageInfo = ({ storageInfo }) => {
   };
   
   return (
-    <div className="bg-white rounded-lg shadow p-4 flex flex-col md:flex-row justify-between items-center">
-      <div className="mb-4 md:mb-0">
-        <h3 className="text-lg font-medium text-gray-900">Storage</h3>
-        <p className="text-sm text-gray-600">
-          {fileService.formatFileSize(storageUsed)} of {fileService.formatFileSize(storageQuota)} used ({usagePercentage}%)
-        </p>
-      </div>
-      
-      <div className="w-full md:w-2/3">
-        <div className="w-full bg-gray-200 rounded-full h-2.5">
-          <div 
-            className={`${getProgressColor(usagePercentage)} h-2.5 rounded-full`} 
-            style={{ width: `${usagePercentage}%` }}
-          ></div>
+    <div className="bg-white rounded-lg shadow-md p-4 border border-gray-100">
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div className="flex items-center">
+          <HardDrive className="h-6 w-6 text-blue-500 mr-3" />
+          <div>
+            <h3 className="text-lg font-medium text-gray-900">Storage</h3>
+            <p className="text-sm text-gray-600">
+              {fileService.formatFileSize(storageUsed)} of {fileService.formatFileSize(storageQuota)} used
+            </p>
+          </div>
+        </div>
+        
+        <div className="w-full md:w-1/2 lg:w-2/3">
+          <div className="flex items-center mb-1 justify-between">
+            <span className="text-xs font-medium text-gray-500">{usagePercentage}% used</span>
+            {usagePercentage > 85 && (
+              <div className="flex items-center text-amber-600 text-xs">
+                <AlertCircle className="h-4 w-4 mr-1" />
+                <span>Storage almost full</span>
+              </div>
+            )}
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className={`${getProgressColor(usagePercentage)} h-2.5 rounded-full transition-all duration-500 ease-in-out`} 
+              style={{ width: `${usagePercentage}%` }}
+            ></div>
+          </div>
         </div>
       </div>
     </div>

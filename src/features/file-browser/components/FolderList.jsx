@@ -1,4 +1,5 @@
 import React from "react";
+import { Folder, FolderOpen } from "lucide-react";
 
 const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
   // Helper to check if folder is selected
@@ -29,13 +30,13 @@ const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
           {folders.map((folder) => (
             <tr 
               key={folder.id} 
-              className={isFolderSelected(folder.id) ? "bg-blue-50" : "hover:bg-gray-50"}
+              className={isFolderSelected(folder.id) ? "bg-blue-50" : "hover:bg-gray-50 transition-colors duration-150"}
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded"
+                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     checked={isFolderSelected(folder.id)}
                     onChange={() => onToggleSelect(folder)}
                     onClick={(e) => e.stopPropagation()}
@@ -46,18 +47,15 @@ const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
                 className="px-6 py-4 whitespace-nowrap cursor-pointer"
                 onClick={() => onNavigate(folder.id)}
               >
-                <div className="flex items-center">
-                  <svg 
-                    xmlns="http://www.w3.org/2000/svg" 
-                    className="h-5 w-5 mr-2 text-yellow-500" 
-                    viewBox="0 0 20 20" 
-                    fill="currentColor"
-                  >
-                    <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1H8a3 3 0 00-3 3v1.5a1.5 1.5 0 01-3 0V6z" clipRule="evenodd" />
-                    <path d="M6 12a2 2 0 012-2h8a2 2 0 012 2v2a2 2 0 01-2 2H2h2a2 2 0 002-2v-2z" />
-                  </svg>
-                  <div className="ml-2">
-                    <div className="text-sm font-medium text-gray-900">
+                <div className="flex items-center group">
+                  <div className="flex-shrink-0 mr-3 group-hover:text-yellow-600 transition-colors duration-150">
+                    {isFolderSelected(folder.id) ? 
+                      <FolderOpen size={20} className="text-yellow-600" /> :
+                      <Folder size={20} className="text-yellow-500" />
+                    }
+                  </div>
+                  <div className="ml-1">
+                    <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-150">
                       {folder.name}
                     </div>
                     <div className="text-xs text-gray-500">

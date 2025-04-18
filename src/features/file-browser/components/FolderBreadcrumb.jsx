@@ -1,9 +1,11 @@
 import React from "react";
+import { Home, ChevronRight, Folder } from "lucide-react";
 
 const FolderBreadcrumb = ({ path, onNavigate }) => {
   if (!path || path.length === 0) {
     return (
-      <div className="flex items-center py-2 px-4 bg-gray-100 rounded-lg">
+      <div className="flex items-center py-2 px-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm">
+        <Home size={16} className="text-blue-600 mr-2" />
         <span 
           onClick={() => onNavigate(null)}
           className="cursor-pointer hover:text-blue-600 font-medium"
@@ -15,36 +17,32 @@ const FolderBreadcrumb = ({ path, onNavigate }) => {
   }
   
   return (
-    <div className="flex items-center py-2 px-4 bg-gray-100 rounded-lg overflow-x-auto">
-      {path.map((folder, index) => (
-        <React.Fragment key={index}>
-          {index > 0 && (
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-4 w-4 mx-2 text-gray-400" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
-            >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M9 5l7 7-7 7" 
-              />
-            </svg>
-          )}
-          <span 
+    <div className="flex items-center py-2 px-4 bg-gray-50 rounded-lg border border-gray-200 shadow-sm overflow-x-auto">
+      <div 
+        onClick={() => onNavigate(null)}
+        className="flex items-center cursor-pointer hover:text-blue-600 transition-colors"
+      >
+        <Home size={16} className="text-blue-600 mr-2" />
+        <span>My Drive</span>
+      </div>
+      
+      {path.slice(1).map((folder, index) => (
+        <React.Fragment key={folder.id || index}>
+          <ChevronRight size={16} className="mx-2 text-gray-400" />
+          <div 
             onClick={() => onNavigate(folder.id)}
             className={`
+              flex items-center
               whitespace-nowrap
               cursor-pointer
               hover:text-blue-600
-              ${index === path.length - 1 ? 'font-medium' : ''}
+              transition-colors
+              ${index === path.length - 2 ? 'font-medium text-blue-700' : ''}
             `}
           >
-            {folder.name}
-          </span>
+            <Folder size={16} className="mr-1" />
+            <span>{folder.name}</span>
+          </div>
         </React.Fragment>
       ))}
     </div>
