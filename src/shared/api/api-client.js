@@ -1,7 +1,7 @@
 // Base API client for making HTTP requests
 import { getErrorMessage } from '../utils/toast';
 
-const API_BASE_URL = 'https://fms.vigorjs.me/api';
+const API_BASE_URL = 'https://cwb6t9ck-6969.usw3.devtunnels.ms/api';
 
 // Helper to get the auth token from local storage
 const getAuthToken = () => {
