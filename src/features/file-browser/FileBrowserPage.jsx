@@ -6,6 +6,8 @@ import FileList from "./components/FileList";
 import FolderList from "./components/FolderList";
 import StorageInfo from "./components/StorageInfo";
 import FileActions from "./components/FileActions";
+import CreateFolderModal from "./components/CreateFolderModal";
+import UploadFileModal from "./components/UploadFileModal";
 import { FolderOpen, Loader } from "lucide-react";
 
 const FileBrowserPage = () => {
@@ -20,6 +22,8 @@ const FileBrowserPage = () => {
   const [storageInfo, setStorageInfo] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [showUploadFile, setShowUploadFile] = useState(false);
 
   // Get folder ID from query params
   useEffect(() => {
@@ -201,10 +205,22 @@ const FileBrowserPage = () => {
                 <p className="text-lg font-medium mb-2">This folder is empty</p>
                 <p className="text-sm mb-4">Upload files or create a new folder to get started</p>
                 <div className="flex justify-center space-x-4">
-                  <button className="px-4 py-2 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors font-medium text-sm">
+                  <button 
+                    onClick={() => setShowUploadFile(true)}
+                    className="flex items-center px-4 py-2 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100 transition-colors font-medium text-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
                     Upload Files
                   </button>
-                  <button className="px-4 py-2 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors font-medium text-sm">
+                  <button 
+                    onClick={() => setShowCreateFolder(true)}
+                    className="flex items-center px-4 py-2 bg-green-50 text-green-700 rounded-md hover:bg-green-100 transition-colors font-medium text-sm"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V8z" clipRule="evenodd" />
+                    </svg>
                     Create Folder
                   </button>
                 </div>
@@ -213,6 +229,23 @@ const FileBrowserPage = () => {
           </div>
         )}
       </div>
+      
+      {/* Modals */}
+      {showCreateFolder && (
+        <CreateFolderModal
+          currentFolderId={currentFolder}
+          onClose={() => setShowCreateFolder(false)}
+          onSuccess={refreshView}
+        />
+      )}
+      
+      {showUploadFile && (
+        <UploadFileModal
+          currentFolderId={currentFolder}
+          onClose={() => setShowUploadFile(false)}
+          onSuccess={refreshView}
+        />
+      )}
     </div>
   );
 };
