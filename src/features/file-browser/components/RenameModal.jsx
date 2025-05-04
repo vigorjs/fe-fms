@@ -1,18 +1,35 @@
-import React, { useState } from "react";
-import fileService from "../../../shared/api/file-service";
+import React, { useState, useEffect } from "react";
 import { showToast, showErrorToast, TOAST_TYPES } from "../../../shared/utils/toast";
 import ModalWrapper from "./ModalWrapper";
 
-const CreateFolderModal = ({ currentFolderId, onClose, onSuccess }) => {
-  const [folderName, setFolderName] = useState("");
+const RenameModal = ({ item, type, onClose, onRename }) => {
+  const [newName, setNewName] = useState(item.name || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  
+  // Focus input on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const input = document.getElementById("rename-input");
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!folderName.trim()) {
-      setError("Folder name is required");
+    if (!newName.trim()) {
+      setError(`${type.charAt(0).toUpperCase() + type.slice(1)} name is required`);
+      return;
+    }
+    
+    if (newName.trim() === item.name) {
+      onClose();
       return;
     }
     
@@ -20,19 +37,12 @@ const CreateFolderModal = ({ currentFolderId, onClose, onSuccess }) => {
     setError("");
     
     try {
-      await fileService.createFolder({
-        name: folderName.trim(),
-        parentId: currentFolderId
-      });
-      
-      showToast(`Folder "${folderName.trim()}" created successfully`, TOAST_TYPES.SUCCESS);
-      onSuccess();
-      onClose();
+      onRename(newName.trim());
+      showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} renamed successfully`, TOAST_TYPES.SUCCESS);
     } catch (error) {
-      console.error("Error creating folder:", error);
-      setError(error.response?.data?.error || error.message || "Failed to create folder. Please try again.");
+      console.error(`Error renaming ${type}:`, error);
+      setError(error.response?.data?.error || error.message || `Failed to rename ${type}. Please try again.`);
       showErrorToast(error);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -41,7 +51,7 @@ const CreateFolderModal = ({ currentFolderId, onClose, onSuccess }) => {
     <ModalWrapper onClose={onClose}>
       <div className="bg-white rounded-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Create New Folder</h2>
+          <h2 className="text-xl font-bold">Rename {type.charAt(0).toUpperCase() + type.slice(1)}</h2>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -60,17 +70,16 @@ const CreateFolderModal = ({ currentFolderId, onClose, onSuccess }) => {
         
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label className="block text-gray-700 mb-2" htmlFor="folderName">
-              Folder Name
+            <label className="block text-gray-700 mb-2" htmlFor="rename-input">
+              New Name
             </label>
             <input
               type="text"
-              id="folderName"
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
+              id="rename-input"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter folder name"
-              autoFocus
+              placeholder={`Enter new ${type} name`}
               disabled={isSubmitting}
             />
           </div>
@@ -89,7 +98,7 @@ const CreateFolderModal = ({ currentFolderId, onClose, onSuccess }) => {
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Creating..." : "Create"}
+              {isSubmitting ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
@@ -98,4 +107,4 @@ const CreateFolderModal = ({ currentFolderId, onClose, onSuccess }) => {
   );
 };
 
-export default CreateFolderModal;
+export default RenameModal;

@@ -3,7 +3,10 @@ import fileService from "../../../shared/api/file-service";
 import { HardDrive, AlertCircle } from "lucide-react";
 
 const StorageInfo = ({ storageInfo }) => {
-  const { storageQuota, storageUsed, usagePercentage } = storageInfo;
+  // Ensure values are parsed correctly
+  const storageQuota = storageInfo?.storageQuota ? parseInt(storageInfo.storageQuota) : 0;
+  const storageUsed = storageInfo?.storageUsed ? parseInt(storageInfo.storageUsed) : 0;
+  const usagePercentage = storageInfo?.usagePercentage || 0;
   
   // Progress bar color based on usage
   const getProgressColor = (percentage) => {
@@ -38,7 +41,7 @@ const StorageInfo = ({ storageInfo }) => {
           <div className="w-full bg-gray-200 rounded-full h-2.5">
             <div 
               className={`${getProgressColor(usagePercentage)} h-2.5 rounded-full transition-all duration-500 ease-in-out`} 
-              style={{ width: `${usagePercentage}%` }}
+              style={{ width: `${usagePercentage > 0 ? usagePercentage : 0}%` }}
             ></div>
           </div>
         </div>

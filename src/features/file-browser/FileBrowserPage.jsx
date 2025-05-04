@@ -37,6 +37,7 @@ const FileBrowserPage = () => {
     const loadStorageInfo = async () => {
       try {
         const info = await fileService.getStorageInfo();
+        console.log('Storage info loaded:', info); // Add logging
         setStorageInfo(info);
       } catch (error) {
         console.error("Failed to load storage info:", error);
@@ -184,6 +185,7 @@ const FileBrowserPage = () => {
                   selectedItems={selectedItems}
                   onNavigate={navigateToFolder}
                   onToggleSelect={(folder) => toggleSelectItem(folder, 'folder')}
+                  onRefresh={refreshView}
                 />
               </div>
             )}

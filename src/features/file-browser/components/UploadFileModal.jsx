@@ -2,6 +2,7 @@ import React, { useState, useRef } from "react";
 import fileService from "../../../shared/api/file-service";
 import { showToast, showErrorToast, TOAST_TYPES } from "../../../shared/utils/toast";
 import { FileImage, FileVideo, FileText, FileMusic, FileIcon } from "lucide-react";
+import ModalWrapper from "./ModalWrapper";
 
 const UploadFileModal = ({ currentFolderId, onClose, onSuccess }) => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -68,7 +69,7 @@ const UploadFileModal = ({ currentFolderId, onClose, onSuccess }) => {
   };
   
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center bg-black bg-opacity-50">
+    <ModalWrapper onClose={onClose}>
       <div className="bg-white rounded-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Upload File</h2>
@@ -265,7 +266,7 @@ const UploadFileModal = ({ currentFolderId, onClose, onSuccess }) => {
           </div>
         </form>
       </div>
-    </div>
+    </ModalWrapper>
   );
 };
 

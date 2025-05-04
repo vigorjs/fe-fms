@@ -1,10 +1,67 @@
-import React from "react";
-import { Folder, FolderOpen } from "lucide-react";
+import React, { useState } from "react";
+import { Folder, FolderOpen, MoreVertical } from "lucide-react";
+import ItemContextMenu from "./ItemContextMenu";
+import fileService from "../../../shared/api/file-service";
+import { showToast, showErrorToast, TOAST_TYPES } from "../../../shared/utils/toast";
 
-const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
+const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect, onRefresh }) => {
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, folder: null });
+  
   // Helper to check if folder is selected
   const isFolderSelected = (folderId) => {
     return selectedItems.some(item => item.id === `folder-${folderId}`);
+  };
+
+  // Show context menu
+  const handleContextMenu = (e, folder) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      folder
+    });
+  };
+  
+  // Close context menu
+  const closeContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0, folder: null });
+  };
+  
+  // Handle folder rename
+  const handleRename = async (folderId, newName) => {
+    try {
+      await fileService.renameFolder(folderId, newName);
+      onRefresh();
+      showToast("Folder renamed successfully", TOAST_TYPES.SUCCESS);
+    } catch (error) {
+      console.error("Error renaming folder:", error);
+      showErrorToast(error);
+    }
+  };
+  
+  // Handle folder access level change
+  const handleChangeAccessLevel = async (folderId, newAccessLevel) => {
+    try {
+      await fileService.updateFolderAccessLevel(folderId, newAccessLevel);
+      onRefresh();
+      showToast("Folder access level updated", TOAST_TYPES.SUCCESS);
+    } catch (error) {
+      console.error("Error updating folder access level:", error);
+      showErrorToast(error);
+    }
+  };
+  
+  // Handle folder deletion
+  const handleDelete = async (folderId) => {
+    try {
+      await fileService.deleteFolder(folderId);
+      onRefresh();
+      showToast("Folder deleted successfully", TOAST_TYPES.SUCCESS);
+    } catch (error) {
+      console.error("Error deleting folder:", error);
+      showErrorToast(error);
+    }
   };
 
   return (
@@ -24,6 +81,9 @@ const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
             <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Access
             </th>
+            <th scope="col" className="w-12 px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white divide-y divide-gray-200">
@@ -31,6 +91,7 @@ const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
             <tr 
               key={folder.id} 
               className={isFolderSelected(folder.id) ? "bg-blue-50" : "hover:bg-gray-50 transition-colors duration-150"}
+              onContextMenu={(e) => handleContextMenu(e, folder)}
             >
               <td className="px-6 py-4 whitespace-nowrap">
                 <div className="flex items-center">
@@ -75,10 +136,34 @@ const FolderList = ({ folders, selectedItems, onNavigate, onToggleSelect }) => {
                   {folder.accessLevel}
                 </span>
               </td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleContextMenu(e, folder);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <MoreVertical size={16} />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      
+      {/* Context Menu */}
+      {contextMenu.visible && (
+        <ItemContextMenu
+          item={contextMenu.folder}
+          type="folder"
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={closeContextMenu}
+          onDelete={handleDelete}
+          onRename={handleRename}
+          onChangeAccessLevel={handleChangeAccessLevel}
+        />
+      )}
     </div>
   );
 };

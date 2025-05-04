@@ -3,6 +3,7 @@ import fileService from "../../../shared/api/file-service";
 import { showToast, showErrorToast, hideToast, TOAST_TYPES } from "../../../shared/utils/toast";
 import FileViewer from "./FileViewer";
 import ConfirmationModal from "../../../shared/components/ConfirmationModal";
+import ItemContextMenu from "./ItemContextMenu";
 import { 
   FileIcon, 
   FileImage, 
@@ -13,7 +14,8 @@ import {
   Download,
   Share2,
   Eye,
-  Trash2
+  Trash2,
+  MoreVertical
 } from "lucide-react";
 
 const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
@@ -23,10 +25,51 @@ const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
     isOpen: false,
     fileToDelete: null
   });
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, file: null });
   
   // Helper to check if file is selected
   const isFileSelected = (fileId) => {
     return selectedItems.some(item => item.id === `file-${fileId}`);
+  };
+  
+  // Show context menu
+  const handleContextMenu = (e, file) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      file
+    });
+  };
+  
+  // Close context menu
+  const closeContextMenu = () => {
+    setContextMenu({ visible: false, x: 0, y: 0, file: null });
+  };
+  
+  // Handle file rename
+  const handleRename = async (fileId, newName) => {
+    try {
+      await fileService.renameFile(fileId, newName);
+      onRefresh();
+      showToast("File renamed successfully", TOAST_TYPES.SUCCESS);
+    } catch (error) {
+      console.error("Error renaming file:", error);
+      showErrorToast(error);
+    }
+  };
+  
+  // Handle file access level change
+  const handleChangeAccessLevel = async (fileId, newAccessLevel) => {
+    try {
+      await fileService.updateFileAccessLevel(fileId, newAccessLevel);
+      onRefresh();
+      showToast("File access level updated", TOAST_TYPES.SUCCESS);
+    } catch (error) {
+      console.error("Error updating file access level:", error);
+      showErrorToast(error);
+    }
   };
 
   // Download file
@@ -222,7 +265,7 @@ const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white divide-y divide-gray-200" onContextMenu={(e) => e.preventDefault()}>
             {files.length === 0 && (
               <tr>
                 <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
@@ -274,14 +317,22 @@ const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleContextMenu(e, file);
+                    }}
+                    className="text-gray-500 hover:text-gray-700 mr-3 transition-colors"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
                   {isViewable(file.mimeType) && (
                     <button
                       onClick={() => setViewingFile(file)}
                       className="inline-flex items-center text-indigo-600 hover:text-indigo-900 mr-3 transition-colors"
                       title="View File"
                     >
-                      <Eye size={16} className="mr-1" />
-                      <span>View</span>
+                      <Eye size={16} />
                     </button>
                   )}
                   <button
@@ -289,16 +340,7 @@ const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
                     className="inline-flex items-center text-blue-600 hover:text-blue-900 mr-3 transition-colors"
                     title="Download File"
                   >
-                    <Download size={16} className="mr-1" />
-                    <span>Download</span>
-                  </button>
-                  <button
-                    onClick={() => handleCreatePublicLink(file)}
-                    className="inline-flex items-center text-green-600 hover:text-green-900 mr-3 transition-colors"
-                    title="Share File"
-                  >
-                    <Share2 size={16} className="mr-1" />
-                    <span>Share</span>
+                    <Download size={16} />
                   </button>
                   <button
                     onClick={() => showDeleteConfirmation(file)}
@@ -306,8 +348,7 @@ const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
                     title="Delete File"
                     disabled={deletingFile === file.id}
                   >
-                    <Trash2 size={16} className="mr-1" />
-                    <span>{deletingFile === file.id ? "Deleting..." : "Delete"}</span>
+                    <Trash2 size={16} />
                   </button>
                 </td>
               </tr>
@@ -335,6 +376,28 @@ const FileList = ({ files, selectedItems, onToggleSelect, onRefresh }) => {
         cancelText="Cancel"
         type="danger"
       />
+      
+      {/* Context Menu */}
+      {contextMenu.visible && (
+        <ItemContextMenu
+          item={contextMenu.file}
+          type="file"
+          position={{ x: contextMenu.x, y: contextMenu.y }}
+          onClose={closeContextMenu}
+          onDelete={(fileId) => {
+            const fileToDelete = files.find(f => f.id === fileId);
+            if (fileToDelete) {
+              setConfirmModal({
+                isOpen: true,
+                fileToDelete
+              });
+            }
+          }}
+          onRename={handleRename}
+          onChangeAccessLevel={handleChangeAccessLevel}
+          onShareClick={handleCreatePublicLink}
+        />
+      )}
     </>
   );
 };

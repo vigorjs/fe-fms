@@ -3,7 +3,7 @@ import fileService from "../../../shared/api/file-service";
 import { showToast, showErrorToast, TOAST_TYPES } from "../../../shared/utils/toast";
 import ModalWrapper from "./ModalWrapper";
 
-const ShareFileModal = ({ file, onClose, onSuccess }) => {
+const ShareModal = ({ item, type, onClose, onSuccess }) => {
   const [email, setEmail] = useState("");
   const [permission, setPermission] = useState("VIEW");
   const [publicLink, setPublicLink] = useState("");
@@ -13,17 +13,17 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
   const [error, setError] = useState("");
   const [shareSuccess, setShareSuccess] = useState(false);
   
-  // Check if file is already public
+  // Check if item is already public
   useEffect(() => {
-    if (file && file.accessLevel === 'PUBLIC' && file.publicToken) {
+    if (item && item.accessLevel === 'PUBLIC' && item.publicToken) {
       // Set direct download link
-      setPublicLink(fileService.getPublicFileUrl(file.publicToken));
+      setPublicLink(fileService.getPublicFileUrl(item.publicToken));
       
       // Set view in browser link with full absolute URL
       const origin = window.location.origin;
-      setPublicViewLink(`${origin}/view/${file.publicToken}`);
+      setPublicViewLink(`${origin}/view/${item.publicToken}`);
     }
-  }, [file]);
+  }, [item]);
   
   // Clear any previous errors when the modal opens
   useEffect(() => {
@@ -44,16 +44,22 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
     setError("");
     
     try {
-      await fileService.shareFile(file.id, email.trim(), permission);
+      // Call the appropriate share method based on item type
+      if (type === 'file') {
+        await fileService.shareFile(item.id, email.trim(), permission);
+      } else if (type === 'folder') {
+        await fileService.shareFolder(item.id, email.trim(), permission);
+      }
+      
       setShareSuccess(true);
       setEmail("");
-      showToast(`File shared with ${email.trim()} successfully`, TOAST_TYPES.SUCCESS);
+      showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} shared with ${email.trim()} successfully`, TOAST_TYPES.SUCCESS);
       
-      // After successful share, refresh the file data
+      // After successful share, call success callback
       onSuccess();
     } catch (error) {
-      console.error("Error sharing file:", error);
-      setError(error.response?.data?.error || error.message || "Failed to share file. Please try again.");
+      console.error(`Error sharing ${type}:`, error);
+      setError(error.response?.data?.error || error.message || `Failed to share ${type}. Please try again.`);
       showErrorToast(error);
     } finally {
       setIsSharing(false);
@@ -66,7 +72,14 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
     setError("");
   
     try {
-      const result = await fileService.createPublicLink(file.id);
+      let result;
+      
+      // Call the appropriate public link creation method based on item type
+      if (type === 'file') {
+        result = await fileService.createPublicLink(item.id);
+      } else if (type === 'folder') {
+        result = await fileService.createFolderPublicLink(item.id);
+      }
   
       const publicDownloadUrl = fileService.getPublicFileUrl(result.publicToken);
       const origin = window.location.origin;
@@ -83,8 +96,8 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
   
       onSuccess();
     } catch (error) {
-      console.error("Error creating public link:", error);
-      setError(error.response?.data?.error || error.message || "Failed to create public link. Please try again.");
+      console.error(`Error creating public link for ${type}:`, error);
+      setError(error.response?.data?.error || error.message || `Failed to create public link. Please try again.`);
       showErrorToast(error);
     } finally {
       setIsGeneratingLink(false);
@@ -126,7 +139,7 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
     <ModalWrapper onClose={onClose}>
       <div className="bg-white rounded-lg w-full max-w-md p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Share File</h2>
+          <h2 className="text-xl font-bold">Share {type.charAt(0).toUpperCase() + type.slice(1)}</h2>
           <button 
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
@@ -138,8 +151,10 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
         </div>
         
         <div className="mb-4 p-3 bg-gray-100 rounded">
-          <h3 className="font-medium">{file.name}</h3>
-          <p className="text-sm text-gray-600">{fileService.formatFileSize(file.size)}</p>
+          <h3 className="font-medium">{item.name}</h3>
+          {type === 'file' && (
+            <p className="text-sm text-gray-600">{fileService.formatFileSize(item.size)}</p>
+          )}
         </div>
         
         {error && (
@@ -150,7 +165,7 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
         
         {shareSuccess && (
           <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
-            File shared successfully!
+            {type.charAt(0).toUpperCase() + type.slice(1)} shared successfully!
           </div>
         )}
         
@@ -209,22 +224,24 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
                 </button>
               </div>
               
-              {/* View Link */}
-              <div className="flex items-center mb-3">
-                <input
-                  type="text"
-                  value={publicViewLink}
-                  readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-l focus:outline-none text-sm"
-                  placeholder="View in browser link"
-                />
-                <button
-                  onClick={() => handleCopyLink(publicViewLink)}
-                  className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r"
-                >
-                  Copy
-                </button>
-              </div>
+              {/* View Link for files only */}
+              {type === 'file' && (
+                <div className="flex items-center mb-3">
+                  <input
+                    type="text"
+                    value={publicViewLink}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l focus:outline-none text-sm"
+                    placeholder="View in browser link"
+                  />
+                  <button
+                    onClick={() => handleCopyLink(publicViewLink)}
+                    className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-r"
+                  >
+                    Copy
+                  </button>
+                </div>
+              )}
               
               <div className="text-sm text-gray-600 mb-2">
                 <p>Open links:</p>
@@ -239,14 +256,16 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
                 >
                   Download
                 </a>
-                <a 
-                  href={publicViewLink}
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 text-center py-2 px-3 rounded text-sm"
-                >
-                  View
-                </a>
+                {type === 'file' && (
+                  <a 
+                    href={publicViewLink}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-green-100 hover:bg-green-200 text-green-800 text-center py-2 px-3 rounded text-sm"
+                  >
+                    View
+                  </a>
+                )}
               </div>
             </div>
           ) : (
@@ -260,7 +279,7 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
           )}
           
           <p className="text-xs text-gray-500 mt-1">
-            Anyone with these links can access the file
+            Anyone with these links can access the {type}
           </p>
         </div>
       </div>
@@ -268,4 +287,4 @@ const ShareFileModal = ({ file, onClose, onSuccess }) => {
   );
 };
 
-export default ShareFileModal;
+export default ShareModal;

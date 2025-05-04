@@ -19,6 +19,8 @@ const Sidebar = ({ user }) => {
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const [showFolders, setShowFolders] = useState(true);
   const [error, setError] = useState(null);
+  const [currentFolderId, setCurrentFolderId] = useState(null);
+  const [folderPath, setFolderPath] = useState([]);
   
   // Check if current path is active
   const isActive = (path) => {
@@ -37,25 +39,50 @@ const Sidebar = ({ user }) => {
     }`;
   };
   
-  // Load top-level folders when My Drive is active
+  // Extract current folder ID from URL
   useEffect(() => {
     if (isActive("/files")) {
-      loadFolders();
+      const params = new URLSearchParams(location.search);
+      const folderId = params.get("folderId");
+      setCurrentFolderId(folderId ? parseInt(folderId) : null);
     }
   }, [location]);
   
+  // Load folders when the current folder changes
+  useEffect(() => {
+    if (isActive("/files")) {
+      loadFolders(currentFolderId);
+      if (currentFolderId) {
+        loadFolderPath(currentFolderId);
+      } else {
+        setFolderPath([]);
+      }
+    }
+  }, [currentFolderId]);
+  
   // Function to load folders
-  const loadFolders = async () => {
+  const loadFolders = async (folderId = null) => {
     try {
       setIsLoadingFolders(true);
       setError(null);
-      const result = await fileService.getFolderContents(null); // Get root folders
+      const result = await fileService.getFolderContents(folderId);
       setFolders(result.folders || []);
     } catch (error) {
       console.error("Failed to load folders:", error);
       setError("Failed to load folders");
     } finally {
       setIsLoadingFolders(false);
+    }
+  };
+  
+  // Function to load folder path for breadcrumbs
+  const loadFolderPath = async (folderId) => {
+    try {
+      const result = await fileService.getFolderPath(folderId);
+      setFolderPath(result.path || []);
+    } catch (error) {
+      console.error("Failed to load folder path:", error);
+      setFolderPath([]);
     }
   };
 
@@ -118,31 +145,61 @@ const Sidebar = ({ user }) => {
                   </div>
                 ) : error ? (
                   <div className="text-xs text-red-500 py-1 px-2">{error}</div>
-                ) : folders.length > 0 ? (
+                ) : (
                   <>
-                    {/* Create new folder button */}
+                    {/* Create new folder and upload buttons */}
                     <Link
-                      to="/files"
+                      to={currentFolderId ? `/files?folderId=${currentFolderId}` : "/files"}
                       className="flex items-center py-1.5 px-3 rounded text-xs font-medium text-gray-700 hover:bg-gray-100"
                     >
                       <PlusCircle size={14} className="mr-2 text-green-600" />
                       <span>New Folder</span>
                     </Link>
                     
-                    {/* Upload file button */}
                     <Link
-                      to="/files"
+                      to={currentFolderId ? `/files?folderId=${currentFolderId}` : "/files"}
                       className="flex items-center py-1.5 px-3 rounded text-xs font-medium text-gray-700 hover:bg-gray-100"
                     >
                       <Upload size={14} className="mr-2 text-blue-600" />
                       <span>Upload File</span>
                     </Link>
                     
-                    {/* Divider */}
-                    <div className="border-t border-gray-200 my-1"></div>
+                    {/* Show folder path if we're in a subfolder */}
+                    {folderPath.length > 0 && (
+                      <>
+                        <div className="border-t border-gray-200 my-1"></div>
+                        
+                        {/* Back to parent folder link */}
+                        {currentFolderId && (
+                          <Link
+                            to={folderPath.length > 1 ? 
+                              `/files?folderId=${folderPath[folderPath.length - 2]?.id || ''}` : 
+                              "/files"}
+                            className="flex items-center py-1.5 px-3 rounded text-xs font-medium text-gray-700 hover:bg-gray-100"
+                          >
+                            <ChevronRight size={14} className="mr-2 rotate-180" />
+                            <span>Back to {folderPath.length > 1 ? 
+                              folderPath[folderPath.length - 2]?.name || 'Parent' : 
+                              'My Drive'}</span>
+                          </Link>
+                        )}
+                        
+                        {/* Current folder label */}
+                        <div className="py-1.5 px-3 text-xs font-semibold text-blue-600">
+                          {currentFolderId ? 
+                            `${folderPath[folderPath.length - 1]?.name || 'Current Folder'}:` : 
+                            'My Drive:'}
+                        </div>
+                      </>
+                    )}
                     
-                    {/* List all root folders */}
-                    {folders.map((folder) => (
+                    {/* Divider */}
+                    {folders.length > 0 && (
+                      <div className="border-t border-gray-200 my-1"></div>
+                    )}
+                    
+                    {/* List all folders in current location */}
+                    {folders.length > 0 ? folders.map((folder) => (
                       <Link
                         key={folder.id}
                         to={`/files?folderId=${folder.id}`}
@@ -155,12 +212,16 @@ const Sidebar = ({ user }) => {
                         <Folder size={14} className="mr-2" />
                         <span className="truncate">{folder.name}</span>
                       </Link>
-                    ))}
+                    )) : currentFolderId ? (
+                      <div className="text-xs text-gray-500 py-1 px-2">
+                        No folders in this location
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500 py-1 px-2">
+                        No folders found
+                      </div>
+                    )}
                   </>
-                ) : (
-                  <div className="text-xs text-gray-500 py-1 px-2">
-                    No folders found
-                  </div>
                 )}
               </div>
             )}

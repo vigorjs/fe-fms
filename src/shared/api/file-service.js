@@ -7,19 +7,39 @@ const fileService = {
     return apiClient.post('/files/folders', folderData);
   },
   
+  renameFolder: (folderId, name) => {
+    return apiClient.put(`/files/folders/${folderId}/rename`, { name });
+  },
+  
+  updateFolderAccessLevel: (folderId, accessLevel) => {
+    return apiClient.put(`/files/folders/${folderId}/access`, { accessLevel });
+  },
+  
+  shareFolder: (folderId, email, permission = 'VIEW') => {
+    return apiClient.post('/files/folders/share', { 
+      folderId, 
+      email, 
+      permission 
+    });
+  },
+  
+  createFolderPublicLink: (folderId) => {
+    return apiClient.post(`/files/folders/${folderId}/public-link`);
+  },
+  
   getFolderContents: (folderId = null) => {
     const queryParams = folderId ? `?folderId=${folderId}` : '';
     return apiClient.get(`/files/folders${queryParams}`);
   },
   
-  // Get folder by ID (for breadcrumb)
-  getFolderById: (folderId) => {
-    return apiClient.get(`/files/folders/${folderId}`);
-  },
-  
   // Get folder path (for breadcrumb)
   getFolderPath: (folderId) => {
     return apiClient.get(`/files/folders/${folderId}/path`);
+  },
+  
+  // Get folder by ID (for breadcrumb)
+  getFolderById: (folderId) => {
+    return apiClient.get(`/files/folders/${folderId}`);
   },
   
   deleteFolder: (folderId) => {
@@ -37,6 +57,14 @@ const fileService = {
     if (sortOrder) queryString += `&sortOrder=${sortOrder}`;
     
     return apiClient.get(`/files/list${queryString}`);
+  },
+  
+  renameFile: (fileId, name) => {
+    return apiClient.put(`/files/${fileId}/rename`, { name });
+  },
+  
+  updateFileAccessLevel: (fileId, accessLevel) => {
+    return apiClient.put(`/files/${fileId}/access`, { accessLevel });
   },
   
   uploadFile: (file, options = {}) => {
